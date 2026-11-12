@@ -1,5 +1,5 @@
 """
-Versão 3: Código-Base com FCFS, SJF e Prioridade (Preemptivo e Não Preemptivo)
+Versão Simplificada: FCFS e Prioridade (Preemptivo e Não Preemptivo)
 Sistemas Operacionais - IFRS Campus Restinga - ADS 3N - 2026/2
 """
 
@@ -21,36 +21,26 @@ def main():
 
     while True:
         alg = int(input(
-            "Escolha o algoritmo?: [1=FCFS 2=SJF Preemptivo 3=SJF Nao Preemptivo  "
-            "4=Prioridade Preemptivo 5=Prioridade Nao Preemptivo  6=Round_Robin  "
-            "7=Imprime lista de processos 8=Popular processos novamente 9=Sair]: "))
+            "Escolha o algoritmo?: [1=FCFS  2=Prioridade Preemptivo  "
+            "3=Prioridade Nao Preemptivo  4=Imprime lista  5=Popular novamente  6=Sair]: "))
 
         if alg == 1:
             FCFS(tempo_execucao, tempo_espera, tempo_restante, tempo_chegada)
 
-        elif alg == 2:  # SJF PREEMPTIVO (SRTF)
-            SJF(True, tempo_execucao, tempo_espera, tempo_restante, tempo_chegada)
-
-        elif alg == 3:  # SJF NAO PREEMPTIVO
-            SJF(False, tempo_execucao, tempo_espera, tempo_restante, tempo_chegada)
-
-        elif alg == 4:  # PRIORIDADE PREEMPTIVO
+        elif alg == 2:  # PRIORIDADE PREEMPTIVO
             PRIORIDADE(True, tempo_execucao, tempo_espera, tempo_restante, tempo_chegada, prioridade)
 
-        elif alg == 5:  # PRIORIDADE NAO PREEMPTIVO
+        elif alg == 3:  # PRIORIDADE NAO PREEMPTIVO
             PRIORIDADE(False, tempo_execucao, tempo_espera, tempo_restante, tempo_chegada, prioridade)
 
-        elif alg == 6:
-            Round_Robin(tempo_execucao, tempo_espera, tempo_restante)
-
-        elif alg == 7:
+        elif alg == 4:
             imprime_processos(tempo_execucao, tempo_espera, tempo_restante, tempo_chegada, prioridade)
 
-        elif alg == 8:
+        elif alg == 5:
             popular_processos(tempo_execucao, tempo_espera, tempo_restante, tempo_chegada, prioridade)
             imprime_processos(tempo_execucao, tempo_espera, tempo_restante, tempo_chegada, prioridade)
 
-        elif alg == 9:
+        elif alg == 6:
             break
 
 
@@ -98,4 +88,65 @@ def FCFS(execucao, espera, restante, chegada):
     processo_em_execucao = 0
 
     for i in range(1, MAXIMO_TEMPO_EXECUCAO):
-        print("tempo[" + str(
+        print("tempo[" + str(i) + "]: processo[" + str(processo_em_execucao) + "] restante=" +
+              str(tempo_restante[processo_em_execucao]))
+
+        if tempo_execucao[processo_em_execucao] == tempo_restante[processo_em_execucao]:
+            tempo_espera[processo_em_execucao] = i - 1
+
+        if tempo_restante[processo_em_execucao] == 1:
+            if processo_em_execucao == (n_processos - 1):
+                break
+            else:
+                processo_em_execucao = processo_em_execucao + 1
+        else:
+            tempo_restante[processo_em_execucao] = tempo_restante[processo_em_execucao] - 1
+
+    imprime_stats(tempo_espera)
+
+
+def PRIORIDADE(preemptivo, execucao, espera, restante, chegada, prioridade):
+    tempo_execucao = list(execucao)
+    tempo_espera = list(espera)
+    tempo_restante = list(restante)
+    tempo_chegada = list(chegada)
+    lista_prioridade = list(prioridade)
+
+    processos_concluidos = 0
+    processo_em_execucao = -1
+
+    for i in range(1, MAXIMO_TEMPO_EXECUCAO):
+        if preemptivo or processo_em_execucao == -1:
+            melhor_prioridade = MAXIMO_TEMPO_EXECUCAO
+            candidato = -1
+
+            for p in range(n_processos):
+                if tempo_chegada[p] <= i and tempo_restante[p] > 0:
+                    if lista_prioridade[p] < melhor_prioridade:
+                        melhor_prioridade = lista_prioridade[p]
+                        candidato = p
+
+            processo_em_execucao = candidato
+
+        if processo_em_execucao == -1:
+            print("tempo[" + str(i) + "]: CPU ociosa (aguardando chegada de processos)")
+            continue
+
+        print("tempo[" + str(i) + "]: processo[" + str(processo_em_execucao) + "] restante=" +
+              str(tempo_restante[processo_em_execucao]) + " (prioridade=" + str(lista_prioridade[processo_em_execucao]) + ")")
+
+        tempo_restante[processo_em_execucao] -= 1
+
+        if tempo_restante[processo_em_execucao] == 0:
+            processos_concluidos += 1
+            tempo_espera[processo_em_execucao] = i - tempo_chegada[processo_em_execucao] - tempo_execucao[processo_em_execucao]
+            processo_em_execucao = -1
+
+            if processos_concluidos == n_processos:
+                break
+
+    imprime_stats(tempo_espera)
+
+
+if __name__ == "__main__":
+    main()
